@@ -1,0 +1,12 @@
+# twitterGPT M1 — local QLoRA finetuning deps (NVIDIA GPU + CUDA required)
+# Install into a fresh venv on your desktop. Unsloth pulls compatible
+# torch/transformers/peft/trl/bitsandbytes versions for you.
+unsloth
+# Pin the rest only if Unsloth's resolver gives you trouble:
+# torch
+# transformers
+# trl
+# peft
+# bitsandbytes
+# datasets
+# accelerate

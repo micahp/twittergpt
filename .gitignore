@@ -1,0 +1,22 @@
+# --- never commit user data ---
+*.zip                 # Twitter archives
+dataset_out/          # parsed tweets (user content)
+**/var/               # backend working data (uploads, datasets, adapters, jobs.db)
+adapters/             # trained LoRA adapters
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# --- node / next ---
+node_modules/
+.next/
+npm-debug.log*
+
+# --- misc ---
+.DS_Store
+*.log
+checkpoints/

@@ -1,0 +1,6 @@
+# twitterGPT backend (FastAPI). ML/training deps live in ../../requirements-train.txt
+# and run inside the compute backend, not the web process.
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic>=2

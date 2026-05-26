@@ -2,10 +2,11 @@
 """
 train_v2.py — Second iteration: ETH zurich route identity.
 
-Same architecture as v1 (Qwen3-0.6B on 1 GPU), but the identity is the core.
-System prompt encodes: train fast, iterate, single GPU, under a minute. Less hype, more building.
+Same architecture as v1 (Qwen3-0.6B, batch=2, accum=8), but with the identity as the core.
+The identity prompt encodes the ethos: train fast, iterate ruthlessly, build with your own hands.
 
-This is the model that will generate tweets in geo ppls' voice.
+Commit: this is the model that will generate tweets in geo ppls' voice.
+System prompt: ETH zurich route — single GPU, under a minute, more models = more learning.
 """
 from __future__ import annotations
 
@@ -19,14 +20,14 @@ def main() -> int:
     ap.add_argument("--data", default="dataset_out")
     ap.add_argument("--out", default="adapters/geoppls_v2")
     ap.add_argument("--model", default="unsloth/Qwen3-0.6B-unsloth-bnb-4bit",
-                    help="0.6B fits comfortably on 6 GB — we proved this works")
+                    help="0.6B fits comfortably on 6 GB — same as v1 but with identity")
     ap.add_argument("--max-seq-len", type=int, default=128,
                     help="ETH zurich route: short sequences, fast iteration")
     ap.add_argument("--epochs", type=float, default=3.0,
                     help="3 epochs on the identity prompt should be enough")
     ap.add_argument("--batch-size", type=int, default=2)
     ap.add_argument("--grad-accum", type=int, default=8,
-                    help="effective batch = 16, optimized for our GPU")
+                    help="effective batch = 16, optimized for 6 GB GPU")
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--lora-alpha", type=int, default=16)
@@ -127,7 +128,7 @@ Be unapologetically yourself. Not a bro, not a guru, not a LinkedIn bot."""
 
     model.save_pretrained(str(out))
     tokenizer.save_pretrained(str(out))
-    print(f"\nV2 saved to: {out}")
+    print(f"V2 done. Saved to: {out}")
     return 0
 
 if __name__ == "__main__":

@@ -24,9 +24,9 @@ def main() -> int:
                     help="ETH zurich route: short sequences, fast iteration")
     ap.add_argument("--epochs", type=float, default=3.0,
                     help="3 epochs on the identity prompt should be enough")
-    ap.add_argument("--batch-size", type=int, default=1)
-    ap.add_argument("--grad-accum", type=int, default=16,
-                    help="effective batch = 16")
+    ap.add_argument("--batch-size", type=int, default=2)
+    ap.add_argument("--grad-accum", type=int, default=8,
+                    help="effective batch = 16, optimized for our GPU")
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--lora-alpha", type=int, default=16)

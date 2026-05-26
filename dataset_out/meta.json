@@ -1,0 +1,45 @@
+{
+  "account": {
+    "username": "geoppls",
+    "display_name": "geo ppls",
+    "bio": "I make cool stuff @innovativehype",
+    "location": "Austin, TX"
+  },
+  "config": {
+    "include_replies": true,
+    "strip_mentions": true,
+    "strip_urls": true,
+    "min_chars": 10,
+    "eval_frac": 0.05,
+    "prompt": "Write a tweet.",
+    "seed": 42
+  },
+  "stats": {
+    "total": 33143,
+    "retweets": 8036,
+    "replies_in": 19747,
+    "originals_in": 5360,
+    "dropped_short": 3726,
+    "dropped_empty": 925,
+    "dropped_dupe": 712,
+    "kept": 19744
+  },
+  "by_year": {
+    "2016": 8,
+    "2017": 56,
+    "2018": 42,
+    "2019": 140,
+    "2020": 280,
+    "2021": 4116,
+    "2022": 5222,
+    "2023": 2621,
+    "2024": 2586,
+    "2025": 3412,
+    "2026": 1261
+  },
+  "train_count": 18757,
+  "eval_count": 987,
+  "total_chars_kept": 1359935,
+  "avg_chars_kept": 68.9,
+  "approx_tokens_kept": 339984
+}

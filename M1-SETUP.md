@@ -38,7 +38,8 @@ Expect ~19.7K kept examples for the @geoppls archive.
 ```bash
 python3 train_qlora.py --data dataset_out --out adapters/geoppls
 ```
-- Default base: `Qwen2.5-3B-Instruct` (4-bit) — fits 6 GB.
+- Default base: `Qwen3-4B` (4-bit) — comfortable on 6 GB.
+- If you want to try the 8B: `--model unsloth/Qwen3-8B-unsloth-bnb-4bit` (tight, may OOM).
 - ~2 epochs over ~18.7K short examples. On a 2060 expect roughly **1–3 hours**
   (varies with thermals/clocks). Watch the loss in the log.
 - **If you hit CUDA out-of-memory:** lower `--max-seq-len 192`, or

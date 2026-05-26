@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """
-train_qlora.py — QLoRA finetune a small instruct model on your tweets (twitterGPT M1).
+train_v2.py — Second generation twitterGPT (ETH zurich route).
 
-Designed to fit a single 6 GB GPU (e.g. one RTX 2060) using Unsloth + 4-bit QLoRA.
-Consumes the output of prepare_dataset.py (dataset_out/train.jsonl + meta.json)
-and writes a LoRA adapter you can load for generation (see generate.py).
-
-Run on a machine with an NVIDIA GPU + CUDA. Example:
-    python3 train_qlora.py --data dataset_out --out adapters/geoppls
-
-Pick a bigger base on a bigger GPU (Daytona) with --model.
+Uses Qwen3-1.5B for better quality while still fitting on 6 GB.
+Identity: train fast, iterate ruthlessly, build with your own hands.
 """
 from __future__ import annotations
 
@@ -18,38 +12,23 @@ import json
 from pathlib import Path
 
 
-def build_system_prompt(meta: dict) -> str:
-    acct = meta.get("account", {}) or {}
-    name = acct.get("display_name") or acct.get("username") or "this person"
-    handle = acct.get("username")
-    bio = acct.get("bio")
-    parts = [f"You are {name}"]
-    if handle:
-        parts[0] += f" (@{handle})"
-    parts[0] += ", writing tweets in your own authentic voice."
-    if bio:
-        parts.append(f"Your bio: {bio}")
-    parts.append("Match your real tone, style, humor, and topics. Write only the tweet text.")
-    return " ".join(parts)
-
-
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--data", default="dataset_out", help="dir with train.jsonl + meta.json")
-    ap.add_argument("--out", default="adapters/model", help="output dir for the LoRA adapter")
-    ap.add_argument("--model", default="unsloth/Qwen3-4B-unsloth-bnb-4bit",
-                    help="base model (4bit). Try unsloth/Qwen3-8B-unsloth-bnb-4bit on a bigger GPU")
-    ap.add_argument("--max-seq-len", type=int, default=128, help="tweets are short; 128 enough for ETH zurich route")
-    ap.add_argument("--epochs", type=float, default=3.0, help="more epochs for deeper identity learning")
-    ap.add_argument("--batch-size", type=int, default=2, help="per-device; keep low for 6GB")
-    ap.add_argument("--grad-accum", type=int, default=8, help="effective batch = batch-size * grad-accum")
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--data", default="dataset_out")
+    ap.add_argument("--out", default="adapters/geoppls_v2")
+    ap.add_argument("--model", default="unsloth/Qwen3-1.5B-unsloth-bnb-4bit",
+                    help="1.5B fits on 6 GB at 4-bit")
+    ap.add_argument("--max-seq-len", type=int, default=128)
+    ap.add_argument("--epochs", type=float, default=3.0)
+    ap.add_argument("--batch-size", type=int, default=1)
+    ap.add_argument("--grad-accum", type=int, default=16,
+                    help="effective batch = batch * accum = 16")
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--lora-alpha", type=int, default=16)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 
-    # Import here so --help works without the heavy deps installed.
     from unsloth import FastLanguageModel
     from unsloth.chat_templates import get_chat_template
     from datasets import load_dataset
@@ -58,16 +37,26 @@ def main() -> int:
 
     data_dir = Path(args.data)
     meta = json.loads((data_dir / "meta.json").read_text(encoding="utf-8"))
-    system_prompt = build_system_prompt(meta)
+
+    system_prompt = """You are geo ppls (@geoppls). You write tweets about AI research and what it's like building AI tools in the real world.
+
+Your philosophy is the ETH zurich route: if you need a cluster to train a model, you're doing it wrong. Train fast, small models, single GPU, under a minute. Iterate. Ship. Learn.
+
+You care about practical engineering over hype. You build with your own hands. The more models you train, the more you learn.
+
+Write in your own authentic voice — casual, direct, occasionally irreverent. Mix short punchy statements with longer thoughtful takes. Match your real tone, style, and topics."""
+
     print(f"System prompt:\n  {system_prompt}\n")
 
-    # --- load 4-bit base + attach LoRA ---
+    # Load 4-bit
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=args.model,
         max_seq_length=args.max_seq_len,
         load_in_4bit=True,
-        dtype=None,  # auto
+        dtype=None,
     )
+
+    # Attach LoRA
     model = FastLanguageModel.get_peft_model(
         model,
         r=args.lora_r,
@@ -81,13 +70,17 @@ def main() -> int:
     )
     tokenizer = get_chat_template(tokenizer, chat_template="qwen-2.5")
 
-    # --- build chat-formatted dataset ---
+    # Load dataset
     ds = load_dataset("json", data_files=str(data_dir / "train.jsonl"), split="train")
 
     def to_text(row):
+        # If the tweet was a reply, mention who they were replying to
+        context = ""
+        if row.get("is_reply"):
+            context = f"\nContext: you're replying to someone."
         msgs = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": row["prompt"]},
+            {"role": "user", "content": f"Write a tweet.{context}"},
             {"role": "assistant", "content": row["completion"]},
         ]
         return {"text": tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=False)}
@@ -95,8 +88,11 @@ def main() -> int:
     ds = ds.map(to_text, remove_columns=ds.column_names)
     print(f"Training examples: {len(ds):,}")
 
+    # Save config + prompt
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    (out / "system_prompt.txt").write_text(system_prompt, encoding="utf-8")
+    (out / "train_config.json").write_text(json.dumps(vars(args), indent=2), encoding="utf-8")
 
     trainer = SFTTrainer(
         model=model,
@@ -126,13 +122,11 @@ def main() -> int:
     print("\nStarting training...\n")
     trainer.train()
 
-    # save adapter + tokenizer + the system prompt used (generate.py reads it)
+    # Save
     model.save_pretrained(str(out))
     tokenizer.save_pretrained(str(out))
-    (out / "system_prompt.txt").write_text(system_prompt, encoding="utf-8")
-    (out / "train_config.json").write_text(json.dumps(vars(args), indent=2), encoding="utf-8")
-    print(f"\nDone. Adapter saved to: {out}")
-    print(f"Generate with:\n  python3 generate.py --adapter {out} -n 10")
+    print(f"\nDone. V2 saved to: {out}")
+    print(f"Generate with:\n  python generate_v2.py --adapter {out}")
     return 0
 
 

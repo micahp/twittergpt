@@ -24,7 +24,7 @@ Full spec + milestones: [`../twitterGPT-PRD.md`](../twitterGPT-PRD.md).
 | Compute | Hybrid: local GPU + Daytona, behind one abstraction | Free/local for dev, cloud for bigger models & scale |
 | Training data | Original tweets **+ replies**, retweets stripped | ~20K authentic-voice examples vs ~5K originals only |
 | Method | QLoRA (4-bit) via Unsloth, per-user LoRA adapter | Fits a 6 GB 2060; one base model + many adapters = cheap multi-user later |
-| Base model | Qwen2.5-3B (local) / Qwen2.5-7B (Daytona) | 3B QLoRA fits 6 GB; 7B for quality on cloud |
+| Base model | Qwen3-4B (local) / Qwen2.5-7B (Daytona) | 4B QLoRA fits 6 GB; 7B+ for quality on cloud |
 | Serving | Ollama/llama.cpp (local) → vLLM adapter-swap (scale) | Simple now, multi-user-ready later |
 
 Author's hardware: desktop with **2x RTX 2060 (6 GB each, no NVLink)** + 32 GB RAM.

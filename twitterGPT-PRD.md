@@ -140,9 +140,8 @@ component — write it clean.
 
 ### Base model
 Pick a small, strong **instruct** model that QLoRA-fits a 6 GB GPU:
-- **Local (2060, 6 GB):** Qwen2.5-3B-Instruct or Llama-3.2-3B-Instruct, **QLoRA
-  (4-bit)**. Recommend **Unsloth** — it cuts VRAM and roughly 2× training speed,
-  and a 3B QLoRA fits comfortably in 6 GB.
+- **Local (2060, 6 GB):** Qwen3-4B-Instruct, **QLoRA (4-bit)** via **Unsloth**.
+  Fits comfortably in 6 GB. Qwen3-8B is possible but tight (batch_size=1).
 - **Daytona (A100/L4-class):** scale up to Qwen2.5-7B-Instruct /
   Llama-3.1-8B-Instruct QLoRA for higher quality.
 
@@ -305,7 +304,7 @@ vLLM adapter-swap serving, queue hardening.
 - **Backend:** FastAPI (Python), SQLite (MVP) → Postgres
 - **Data:** Python stdlib (`zipfile`, `json`), pandas optional
 - **Finetuning:** Unsloth + PEFT/transformers, QLoRA (4-bit)
-- **Base models:** Qwen2.5-3B / Llama-3.2-3B (local), Qwen2.5-7B / Llama-3.1-8B (Daytona)
+- **Base models:** Qwen3-4B (local), Qwen2.5-7B / Llama-3.1-8B (Daytona)
 - **Serving:** llama.cpp / Ollama (local), vLLM (scale)
 - **Compute:** Local 2x RTX 2060 (6 GB) + Daytona GPU workspaces
 - **Queue/storage:** RQ + Redis (optional), filesystem → S3/R2

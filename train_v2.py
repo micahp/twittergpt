@@ -17,7 +17,8 @@ from pathlib import Path
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--data", default="dataset_out")
+    ap.add_argument("--data", default="dataset_out",
+                    help="dataset root with train_filtered.jsonl (originals only)")
     ap.add_argument("--out", default="adapters/geoppls_v2")
     ap.add_argument("--model", default="unsloth/Qwen3-0.6B-unsloth-bnb-4bit",
                     help="0.6B fits comfortably on 6 GB — same as v1 but with identity")
@@ -79,7 +80,7 @@ Be unapologetically yourself. Not a bro, not a guru, not a LinkedIn bot."""
     tokenizer = get_chat_template(tokenizer, chat_template="qwen-2.5")
 
     # Load dataset and format
-    ds = load_dataset("json", data_files=str(data_dir / "train.jsonl"), split="train")
+    ds = load_dataset("json", data_files=str(data_dir / "train_filtered.jsonl"), split="train")
 
     def to_text(row):
         msgs = [

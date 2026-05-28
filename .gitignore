@@ -22,3 +22,12 @@ npm-debug.log*
 checkpoints/
 unsloth_compiled_cache/
 *.log
+
+# --- session temp files ---
+_*.py
+_*.sh
+_*.txt
+_*.b64
+_*.gz
+_chunks/
+_payload.txt
